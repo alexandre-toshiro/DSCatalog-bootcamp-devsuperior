@@ -1,6 +1,7 @@
 package com.bootcamp.dscatalog.services;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +24,13 @@ public class CategoryService {
 		List<Category> list = repository.findAll(); // 1)- fazemos a busca de categorias e guardamos numa lista.
 		return list.stream().map(x -> new CategoryDTO(x)).collect(Collectors.toList()); //2) - Fazemos a conversão para dto e devolvemos apenas ele para o controlador.
 		
+	}
+
+	@Transactional(readOnly = true)
+	public CategoryDTO findById(Long id) {
+		Optional<Category> obj = repository.findById(id);// Retorna um optional, pode ou não ter retornado a entidade
+		Category entity = obj.get(); // Aqui de fato obetemos a entidade dentro do optional.
+		return new CategoryDTO(entity);
 	}
 
 }
