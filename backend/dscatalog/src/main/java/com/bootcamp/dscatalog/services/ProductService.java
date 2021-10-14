@@ -12,8 +12,11 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.bootcamp.dscatalog.dto.CategoryDTO;
 import com.bootcamp.dscatalog.dto.ProductDTO;
+import com.bootcamp.dscatalog.entities.Category;
 import com.bootcamp.dscatalog.entities.Product;
+import com.bootcamp.dscatalog.repositories.CategoryRepository;
 import com.bootcamp.dscatalog.repositories.ProductRepository;
 import com.bootcamp.dscatalog.services.exceptions.DatabaseException;
 import com.bootcamp.dscatalog.services.exceptions.ResourceNotFoundException;
@@ -23,6 +26,9 @@ public class ProductService {
 
 	@Autowired
 	private ProductRepository repository;
+	
+	@Autowired
+	private CategoryRepository categoryRepository;
 
 	@Transactional(readOnly = true)//evita o lock no BD, pois n precisamos travar o banco apenas para leitura.
 	public Page<ProductDTO> findAllPaged(PageRequest pageRequest) {
@@ -42,18 +48,19 @@ public class ProductService {
 	@Transactional
 	public ProductDTO insert(ProductDTO dto) {
 		Product entity = new Product();
-		//entity.setName(dto.getName());
+		copyDtoToEntity(dto, entity);
 		entity = repository.save(entity);
 		return new ProductDTO(entity);
 	}
 
+	
 	@Transactional
 	public ProductDTO update(Long id, ProductDTO dto) {
 		
 		try {// Pode ocorrer um erro desse id não existir no banco, então devemos tratar e lançar a nossa exceção que está tratada pelo ControllerAdvice
 		Product entity = repository.getOne(id);
 		//getOne - Instância um objeto provisório desse objeto sem ir ao banco, necessário para não ir ao banco duas vezes, apenas para 1 update.
-		//entity.setName(dto.getName());
+		copyDtoToEntity(dto, entity);
 		entity = repository.save(entity);// agora de fato irá ao banco salvar as alterações.
 		return new ProductDTO(entity);
 		}
@@ -76,4 +83,49 @@ public class ProductService {
 		}
 		
 	}
+	
+	private void copyDtoToEntity(ProductDTO dto, Product entity) {
+		
+		entity.setName(dto.getName());
+		entity.setDescription(dto.getDescription());
+		entity.setDate(dto.getDate());
+		entity.setImgUrl(dto.getImgUrl());
+		entity.setPrice(dto.getPrice());
+		
+		entity.getCategories().clear();
+		
+		for(CategoryDTO catDto : dto.getCategories()) {
+			Category category = categoryRepository.getOne(catDto.getId());
+			entity.getCategories().add(category);
+		}
+	}
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
