@@ -9,13 +9,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
-import com.bootcamp.dscatalog.services.exceptions.EntityNotFoundException;
+import com.bootcamp.dscatalog.services.exceptions.ResourceNotFoundException;
 
 @ControllerAdvice
 public class ResourceExceptionHandler {
 
-	@ExceptionHandler(EntityNotFoundException.class) // Recebe o nome da exception que deverá ser interceptada
-	public ResponseEntity<StandardError> entityNotFound(EntityNotFoundException e, HttpServletRequest request) {
+	@ExceptionHandler(ResourceNotFoundException.class) // Recebe o nome da exception que deverá ser interceptada
+	public ResponseEntity<StandardError> entityNotFound(ResourceNotFoundException e, HttpServletRequest request) {
 		
 		StandardError err = new StandardError();
 		err.setTimestamp(Instant.now());

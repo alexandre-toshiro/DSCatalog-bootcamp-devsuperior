@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import javax.persistence.EntityNotFoundException;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -11,7 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.bootcamp.dscatalog.dto.CategoryDTO;
 import com.bootcamp.dscatalog.entities.Category;
 import com.bootcamp.dscatalog.repositories.CategoryRepository;
-import com.bootcamp.dscatalog.services.exceptions.EntityNotFoundException;
+import com.bootcamp.dscatalog.services.exceptions.ResourceNotFoundException;
 
 @Service // Registra como componente - Injeção de Dependência.
 public class CategoryService {
@@ -30,7 +32,7 @@ public class CategoryService {
 	@Transactional(readOnly = true)
 	public CategoryDTO findById(Long id) {
 		Optional<Category> obj = repository.findById(id);// Retorna um optional, pode ou não ter retornado a entidade
-		Category entity = obj.orElseThrow(() -> new EntityNotFoundException("Entity not found.")); // Aqui de fato obetemos a entidade dentro do optional.Se não existir, será instanciada uma exception.
+		Category entity = obj.orElseThrow(() -> new ResourceNotFoundException("Entity not found.")); // Aqui de fato obetemos a entidade dentro do optional.Se não existir, será instanciada uma exception.
 		return new CategoryDTO(entity);
 	}
 
@@ -40,6 +42,21 @@ public class CategoryService {
 		entity.setName(dto.getName());
 		entity = repository.save(entity);
 		return new CategoryDTO(entity);
+	}
+
+	@Transactional
+	public CategoryDTO update(Long id, CategoryDTO dto) {
+		
+		try {// Pode ocorrer um erro desse id não existir no banco, então devemos tratar e lançar a nossa exceção que está tratada pelo ControllerAdvice
+		Category entity = repository.getOne(id);
+		//getOne - Instância um objeto provisório desse objeto sem ir ao banco, necessário para não ir ao banco duas vezes, apenas para 1 update.
+		entity.setName(dto.getName());
+		entity = repository.save(entity);// agora de fato irá ao banco salvar as alterações.
+		return new CategoryDTO(entity);
+		}
+		catch (EntityNotFoundException e) {
+			throw new ResourceNotFoundException("Id not found: " + id);
+		}
 	}
 
 }
