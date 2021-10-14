@@ -1,14 +1,14 @@
 package com.bootcamp.dscatalog.services;
 
-import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import javax.persistence.EntityNotFoundException;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,10 +25,10 @@ public class CategoryService {
 	private CategoryRepository repository;
 
 	@Transactional(readOnly = true)//evita o lock no BD, pois n precisamos travar o banco apenas para leitura.
-	public List<CategoryDTO> findAll() {
+	public Page<CategoryDTO> findAllPaged(PageRequest pageRequest) {
 		//Devemos retornar um DTO para a camada de controller.
-		List<Category> list = repository.findAll(); // 1)- fazemos a busca de categorias e guardamos numa lista.
-		return list.stream().map(x -> new CategoryDTO(x)).collect(Collectors.toList()); //2) - Fazemos a conversão para dto e devolvemos apenas ele para o controlador.
+		Page<Category> list = repository.findAll(pageRequest); // 1)- fazemos a busca de categorias e guardamos numa lista.
+		return list.map(x -> new CategoryDTO(x)); //2) - Fazemos a conversão para dto e devolvemos apenas ele para o controlador.
 		
 	}
 
@@ -76,5 +76,4 @@ public class CategoryService {
 		}
 		
 	}
-
 }
