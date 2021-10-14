@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.bootcamp.dscatalog.dto.CategoryDTO;
 import com.bootcamp.dscatalog.entities.Category;
 import com.bootcamp.dscatalog.repositories.CategoryRepository;
+import com.bootcamp.dscatalog.services.exceptions.EntityNotFoundException;
 
 @Service // Registra como componente - Injeção de Dependência.
 public class CategoryService {
@@ -29,7 +30,7 @@ public class CategoryService {
 	@Transactional(readOnly = true)
 	public CategoryDTO findById(Long id) {
 		Optional<Category> obj = repository.findById(id);// Retorna um optional, pode ou não ter retornado a entidade
-		Category entity = obj.get(); // Aqui de fato obetemos a entidade dentro do optional.
+		Category entity = obj.orElseThrow(() -> new EntityNotFoundException("Entity not found.")); // Aqui de fato obetemos a entidade dentro do optional.Se não existir, será instanciada uma exception.
 		return new CategoryDTO(entity);
 	}
 
