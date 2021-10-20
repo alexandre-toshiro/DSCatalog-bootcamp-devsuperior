@@ -1,6 +1,8 @@
 package com.bootcamp.dscatalog.repositories;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.Optional;
@@ -12,6 +14,7 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.dao.EmptyResultDataAccessException;
 
 import com.bootcamp.dscatalog.entities.Product;
+import com.bootcamp.dscatalog.tests.Factory;
 
 @DataJpaTest
 public class ProductRepositoryTests {
@@ -21,6 +24,7 @@ public class ProductRepositoryTests {
 	
 	private long existingId;
 	private long nonExistingId;
+	private long countTotalProducts;
 	
 	@BeforeEach// Usado para instânciar uma variável antes de todos os testes
 	void setUp() throws Exception {
@@ -28,6 +32,18 @@ public class ProductRepositoryTests {
 		nonExistingId = 1000L;
 		// A vantagem desse método é que caso essas váriaveis se repitam em diversos testes, não será necessário a declaração
 		// em cada um deles.
+		countTotalProducts = 25L;
+	}
+	
+	@Test
+	public void saveShouldPersistWithAutoincrementWhenIdIsNull() {
+		Product product = Factory.createProduct();
+		product.setId(null);// apenas para garantir que o produto possui id NULO e portanto o save deverá salvar com autoIncremento
+		
+		product = repository.save(product);
+		
+		assertNotNull(product.getId());
+		assertEquals(countTotalProducts + 1, product.getId());
 	}
 
 	@Test
