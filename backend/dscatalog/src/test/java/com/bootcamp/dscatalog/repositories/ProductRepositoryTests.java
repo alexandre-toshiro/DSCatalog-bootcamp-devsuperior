@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Optional;
 
@@ -33,6 +34,18 @@ public class ProductRepositoryTests {
 		// A vantagem desse método é que caso essas váriaveis se repitam em diversos testes, não será necessário a declaração
 		// em cada um deles.
 		countTotalProducts = 25L;
+	}
+	
+	@Test
+	public void findByIdShouldReturnNonEmptyOptionalWhenIdExists() {
+		Optional<Product> result = repository.findById(existingId);
+		assertTrue(result.isPresent());
+	}
+	
+	@Test
+	public void findByIdShouldReturnEmptyOptionalWhenIdDoesNotExists() {
+		Optional<Product> result = repository.findById(nonExistingId);
+		assertTrue(result.isEmpty());
 	}
 	
 	@Test
