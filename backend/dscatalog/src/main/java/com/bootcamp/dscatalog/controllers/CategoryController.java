@@ -1,4 +1,4 @@
-package com.bootcamp.dscatalog.controller;
+package com.bootcamp.dscatalog.controllers;
 
 import java.net.URI;
 

@@ -23,7 +23,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import com.bootcamp.dscatalog.dto.ProductDTO;
+import com.bootcamp.dscatalog.entities.Category;
 import com.bootcamp.dscatalog.entities.Product;
+import com.bootcamp.dscatalog.repositories.CategoryRepository;
 import com.bootcamp.dscatalog.repositories.ProductRepository;
 import com.bootcamp.dscatalog.services.exceptions.DatabaseException;
 import com.bootcamp.dscatalog.services.exceptions.ResourceNotFoundException;
@@ -39,12 +41,17 @@ public class ProductServiceTests {
 	private long existingId;
 	private long nonExistingId;
 	private long dependentId;
-	
+
 	private PageImpl<Product> page;// Tipo concreto do Pageable.
 	private Product product;
+	private ProductDTO productDTO;
+	private Category category;
 
 	@Mock
 	private ProductRepository repository;
+
+	@Mock
+	private CategoryRepository categoryRepository;
 
 	@BeforeEach
 	void setUp() throws Exception {
@@ -53,6 +60,8 @@ public class ProductServiceTests {
 		dependentId = 4L;
 		product = Factory.createProduct();
 		page = new PageImpl<>(List.of(product));
+		productDTO = Factory.createProductDto();
+		category = Factory.createCategory();
 
 		Mockito.doNothing().when(repository).deleteById(existingId);
 		// Quando mocamos um objeto, devemos fazer um simulação do comportamento
@@ -61,21 +70,33 @@ public class ProductServiceTests {
 		Mockito.doThrow(EmptyResultDataAccessException.class).when(repository).deleteById(nonExistingId);
 		Mockito.doThrow(DataIntegrityViolationException.class).when(repository).deleteById(dependentId);
 		// Métodos void, primeiro temos ação e depois o when.
-		
+
 		// Métodos com retorno, primeiro usamos o when e depois a ação.
-		
-	    Mockito.when(repository.findAll((Pageable) ArgumentMatchers.any())).thenReturn(page);
-	    //ArgumArgumentMatchers - Simulação, n importa muito o tipo, podendo ser "qualquer coisa"
-	    //Fizemos o cast, por conta da sobrecarga do findAll que espera tipos específicos.
-	    
-	    //Simulando comportamento do save
-	    Mockito.when(repository.save(ArgumentMatchers.any())).thenReturn(product);
-	    
-	    //Simulando comportamento do findByid com Id EXISTENTE.
-	    Mockito.when(repository.findById(existingId)).thenReturn(Optional.of(product));// Instância optional com produto.
-	    
-	    //Simulando comportamento do findByid com Id INEXISTENTE.
-	    Mockito.when(repository.findById(nonExistingId)).thenReturn(Optional.empty());
+
+		Mockito.when(repository.findAll((Pageable) ArgumentMatchers.any())).thenReturn(page);
+		// ArgumArgumentMatchers - Simulação, n importa muito o tipo, podendo ser
+		// "qualquer coisa"
+		// Fizemos o cast, por conta da sobrecarga do findAll que espera tipos
+		// específicos.
+
+		// Simulando comportamento do save
+		Mockito.when(repository.save(ArgumentMatchers.any())).thenReturn(product);
+
+		// Simulando comportamento do findByid com Id EXISTENTE.
+		Mockito.when(repository.findById(existingId)).thenReturn(Optional.of(product));// Instância optional com
+																						// produto.
+
+		// Simulando comportamento do findByid com Id INEXISTENTE.
+		Mockito.when(repository.findById(nonExistingId)).thenReturn(Optional.empty());
+
+		// Simulando comportamento do getOne com Id EXISTENTE
+		Mockito.when(repository.getOne(existingId)).thenReturn(product);
+
+		// Simulando comportamento do getOne com Id EXISTENTE
+		Mockito.when(repository.getOne(nonExistingId)).thenThrow(ResourceNotFoundException.class);
+
+		Mockito.when(categoryRepository.getOne(existingId)).thenReturn(category);
+		Mockito.when(categoryRepository.getOne(nonExistingId)).thenThrow(ResourceNotFoundException.class);
 
 	}
 
@@ -107,14 +128,41 @@ public class ProductServiceTests {
 
 		Mockito.verify(repository, Mockito.times(1)).deleteById(dependentId);
 	}
-	
+
 	@Test
 	public void findAllPagedShouldReturnPage() {
 		Pageable pageable = PageRequest.of(0, 10);
 		Page<ProductDTO> result = service.findAllPaged(pageable);
-		
+
 		assertNotNull(result);
 		Mockito.verify(repository).findAll(pageable);
+	}
+
+	@Test
+	public void findByIdShouldReturnDtoWhenIdExists() {
+		ProductDTO dto = service.findById(existingId);
+		assertNotNull(dto);
+	}
+
+	@Test
+	public void findByIdShouldThrowResourceNotFoundExceptionWhenIdDoesNotExists() {
+		assertThrows(ResourceNotFoundException.class, () -> {
+			service.findById(nonExistingId);
+		});
+	}
+
+	@Test
+	public void updateShouldReturnDtoWhenIdExists() {
+		ProductDTO dto = service.update(existingId, productDTO);
+
+		assertNotNull(dto);
+	}
+
+	@Test
+	public void updateShouldThrowResourceNotFoundExceptionWhenIdDoesNotExists() {
+		assertThrows(ResourceNotFoundException.class, () -> {
+			service.update(nonExistingId, productDTO);
+		});
 	}
 
 }
