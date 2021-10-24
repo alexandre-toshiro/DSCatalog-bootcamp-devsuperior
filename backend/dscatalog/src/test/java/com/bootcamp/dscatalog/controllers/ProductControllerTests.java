@@ -1,8 +1,10 @@
 package com.bootcamp.dscatalog.controllers;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -22,6 +24,7 @@ import com.bootcamp.dscatalog.dto.ProductDTO;
 import com.bootcamp.dscatalog.services.ProductService;
 import com.bootcamp.dscatalog.services.exceptions.ResourceNotFoundException;
 import com.bootcamp.dscatalog.tests.Factory;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @WebMvcTest(ProductController.class)
 public class ProductControllerTests {
@@ -31,6 +34,11 @@ public class ProductControllerTests {
 
 	@MockBean
 	private ProductService service;
+	
+	@Autowired
+	private ObjectMapper objectMapper; // objeto auxíliar
+	// Por não ser uma dependência deste controller, podemos injetar aqui diretamente.
+	// Não ferindo o principio de teste de unidade.
 
 	private ProductDTO productDTO;
 	private PageImpl<ProductDTO> page;
@@ -49,6 +57,9 @@ public class ProductControllerTests {
 
 		when(service.findById(existingId)).thenReturn(productDTO);
 		when(service.findById(nonExistingId)).thenThrow(ResourceNotFoundException.class);
+		
+		when(service.update(eq(existingId), any())).thenReturn(productDTO);
+		when(service.update(eq(nonExistingId), any())).thenThrow(ResourceNotFoundException.class);
 
 	}
 
@@ -78,6 +89,36 @@ public class ProductControllerTests {
 		result.andExpect(status().isNotFound());// 404
 		// Como na camada de controller a ResourceNotFound foi tratada pelo controllerAdvice
 		// Não irá retornar a exceção, sim o status 404 - notFound
+	}
+	
+	@Test
+	public void updateShouldReturnProductDTOWhenIdExists() throws Exception {
+		// No update será enviado também um corpo na requisição, portanto devemos simula-lo aqui.
+		// Utilizaremos a dependência auxíliar "ObjectMapper"
+		String jsonBody = objectMapper.writeValueAsString(productDTO);
+		
+		ResultActions result = mockMvc.perform(put("/products/{id}", existingId)
+				.content(jsonBody) // conteúdo que irá no corpo da requisição
+				.contentType(MediaType.APPLICATION_JSON)// tipo do conteúdo
+				.accept(MediaType.APPLICATION_JSON));
+				
+				result.andExpect(status().isOk());
+				result.andExpect(jsonPath("$.id").exists());
+				result.andExpect(jsonPath("$.name").exists());
+				result.andExpect(jsonPath("$.description").exists());
+		
+	}
+	
+	@Test
+	public void updateShouldReturnNotFoundWhenIdDoesNotExists() throws Exception {
+String jsonBody = objectMapper.writeValueAsString(productDTO);
+		
+		ResultActions result = mockMvc.perform(put("/products/{id}", nonExistingId)
+				.content(jsonBody) // conteúdo que irá no corpo da requisição
+				.contentType(MediaType.APPLICATION_JSON)// tipo do conteúdo
+				.accept(MediaType.APPLICATION_JSON));
+				
+				result.andExpect(status().isNotFound());
 	}
 
 }
