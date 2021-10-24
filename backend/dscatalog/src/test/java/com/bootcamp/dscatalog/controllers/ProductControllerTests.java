@@ -1,5 +1,6 @@
 package com.bootcamp.dscatalog.controllers;
 
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
@@ -169,13 +170,15 @@ public class ProductControllerTests {
 	@Test
 	public void deleteShouldThrowDatabaseExceptionWhenIdIsRelatedToAnotherObject() throws Exception {
 		ResultActions result = mockMvc.perform(delete("/products/{id}", dependentId));
-		//result.andExpect(res -> assertTrue(res.getResolvedException() instanceof DatabaseException ));
+		result.andExpect(res -> assertTrue(res.getResolvedException() instanceof DatabaseException ));
 		//1- Fazendo uma expressão lambda para ver a exceção retornada quando for um id dependente.
 		// 3 - No caso código acima serve para ver especificamente o tipo da exceção que está retornando
 		// mesmo quando tratada pelo ControllerAdvice
 		
 		result.andExpect(status().isBadRequest());
 		// 2 - Exceção está sendo tratada no ControllerAdvice e está retornando um status e não a exceção em si.
+		
+		// Pode deixar as duas verificações descomentadas, uma não anula a outra.
 	
 	}
 
