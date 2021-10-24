@@ -1,9 +1,14 @@
 package com.bootcamp.dscatalog.controllers;
 
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -22,6 +27,7 @@ import org.springframework.test.web.servlet.ResultActions;
 
 import com.bootcamp.dscatalog.dto.ProductDTO;
 import com.bootcamp.dscatalog.services.ProductService;
+import com.bootcamp.dscatalog.services.exceptions.DatabaseException;
 import com.bootcamp.dscatalog.services.exceptions.ResourceNotFoundException;
 import com.bootcamp.dscatalog.tests.Factory;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -44,11 +50,16 @@ public class ProductControllerTests {
 	private PageImpl<ProductDTO> page;
 	// PageImpl - Página concreta
 
-	private long existingId = 1L;
-	private long nonExistingId = 2L;
+	private long existingId;
+	private long nonExistingId;
+	private long dependentId;
 
 	@BeforeEach
 	void setUp() throws Exception {
+		
+		 existingId = 1L;
+		 nonExistingId = 2L;
+		 dependentId = 3L;
 
 		productDTO = Factory.createProductDto();
 		page = new PageImpl<>(List.of(productDTO));
@@ -60,6 +71,12 @@ public class ProductControllerTests {
 		
 		when(service.update(eq(existingId), any())).thenReturn(productDTO);
 		when(service.update(eq(nonExistingId), any())).thenThrow(ResourceNotFoundException.class);
+		
+		doNothing().when(service).delete(existingId);
+		doThrow(ResourceNotFoundException.class).when(service).delete(nonExistingId);
+		doThrow(DatabaseException.class).when(service).delete(dependentId);
+		
+		when(service.insert(any())).thenReturn(productDTO);
 
 	}
 
@@ -111,7 +128,7 @@ public class ProductControllerTests {
 	
 	@Test
 	public void updateShouldReturnNotFoundWhenIdDoesNotExists() throws Exception {
-String jsonBody = objectMapper.writeValueAsString(productDTO);
+		String jsonBody = objectMapper.writeValueAsString(productDTO);
 		
 		ResultActions result = mockMvc.perform(put("/products/{id}", nonExistingId)
 				.content(jsonBody) // conteúdo que irá no corpo da requisição
@@ -119,6 +136,43 @@ String jsonBody = objectMapper.writeValueAsString(productDTO);
 				.accept(MediaType.APPLICATION_JSON));
 				
 				result.andExpect(status().isNotFound());
+	}
+	
+	@Test
+	public void insertShouldReturnCreatedAndProductDTO() throws Exception {
+		String jsonBody = objectMapper.writeValueAsString(productDTO);
+
+		ResultActions result = mockMvc.perform(post("/products")
+				.content(jsonBody) 
+				.contentType(MediaType.APPLICATION_JSON)
+				.accept(MediaType.APPLICATION_JSON));
+		
+		result.andExpect(status().isCreated());
+		result.andExpect(jsonPath("$.id").exists());
+
+	}
+	
+	@Test
+	public void deleteShouldReturnNoContentWhenIdExists() throws Exception {
+		ResultActions result = mockMvc.perform(delete("/products/{id}", existingId));
+		
+		result.andExpect(status().isNoContent());
+	}
+	
+	@Test
+	public void deleteShouldReturnNotFoundWhenIdDoesNotExists() throws Exception {
+		ResultActions result = mockMvc.perform(delete("/products/{id}", nonExistingId));
+		
+		result.andExpect(status().isNotFound());
+
+	}
+	
+	@Test
+	public void deleteShouldThrowDatabaseExceptionWhenIdIsRelatedToAnotherObject() throws Exception {
+		ResultActions result = mockMvc.perform(delete("/products/{id}", dependentId));
+		result.andExpect(res -> assertTrue(res.getResolvedException() instanceof DatabaseException ));
+		// Fazendo uma expressão lambda para ver a exceção retornada quando for um id dependente.
+
 	}
 
 }
