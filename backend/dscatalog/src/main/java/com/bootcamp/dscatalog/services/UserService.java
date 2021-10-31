@@ -9,11 +9,13 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.bootcamp.dscatalog.dto.RoleDTO;
 import com.bootcamp.dscatalog.dto.UserDTO;
+import com.bootcamp.dscatalog.dto.UserInsertDTO;
 import com.bootcamp.dscatalog.entities.Role;
 import com.bootcamp.dscatalog.entities.User;
 import com.bootcamp.dscatalog.repositories.RoleRepository;
@@ -23,6 +25,10 @@ import com.bootcamp.dscatalog.services.exceptions.ResourceNotFoundException;
 
 @Service 
 public class UserService {
+	
+	@Autowired
+	private BCryptPasswordEncoder passwordEncoder;
+	// Injetamos a classe do bcrypt que foi configurada como Bean, na classe AppConfig
 
 	@Autowired
 	private UserRepository repository;
@@ -45,9 +51,10 @@ public class UserService {
 	}
 
 	@Transactional
-	public UserDTO insert(UserDTO dto) {
+	public UserDTO insert(UserInsertDTO dto) {
 		User entity = new User();
 		copyDtoToEntity(dto, entity);
+		entity.setPassword(passwordEncoder.encode(dto.getPassword()));// hasheamos a senha usando método do Bcrypt
 		entity = repository.save(entity);
 		return new UserDTO(entity);
 	}
