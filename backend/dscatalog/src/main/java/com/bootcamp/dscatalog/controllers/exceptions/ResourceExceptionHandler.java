@@ -1,4 +1,4 @@
-package com.bootcamp.dscatalog.controller.exceptions;
+package com.bootcamp.dscatalog.controllers.exceptions;
 
 import java.time.Instant;
 

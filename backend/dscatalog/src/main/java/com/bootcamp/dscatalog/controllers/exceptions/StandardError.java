@@ -1,4 +1,4 @@
-package com.bootcamp.dscatalog.controller.exceptions;
+package com.bootcamp.dscatalog.controllers.exceptions;
 
 import java.io.Serializable;
 import java.time.Instant;
