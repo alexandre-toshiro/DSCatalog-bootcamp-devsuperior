@@ -35,7 +35,7 @@ public class Product implements Serializable {
 	private Instant date;
 	
 	@ManyToMany
-	@JoinTable(name = "tb_product_category", // Nome da 3 tabela que irá relacionar as duas entidade.
+	@JoinTable(name = "tb_product_category", // Nome da 3º tabela que irá relacionar as duas entidade.
 			   joinColumns = @JoinColumn(name = "product_id"), // Chave estrangeira que irá ficar na 3 tabela da classe onde estou.  
 			   inverseJoinColumns = @JoinColumn(name = "category_id") // Indica a chave estrangeira da outra entidade que está se relacionando.
 				// O JPA sabe que esse id é da outra entidade relacionada, devido ao tipo da coleção abaixo.
