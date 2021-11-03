@@ -1,7 +1,6 @@
 package com.bootcamp.dscatalog.controllers.exceptions;
 
 import java.time.Instant;
-import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 
