@@ -23,7 +23,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
 	@Override
 	public void configure(WebSecurity web) throws Exception {
-		web.ignoring().antMatchers("/**");// Ignora todos os endpoints(n exige segurança)
+		web.ignoring().antMatchers("/actuator/**");// Ignora todos os endpoints(n exige segurança)
 	}
 
 	@Override
