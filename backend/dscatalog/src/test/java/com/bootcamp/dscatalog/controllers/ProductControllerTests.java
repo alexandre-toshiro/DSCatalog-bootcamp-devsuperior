@@ -18,7 +18,8 @@ import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.http.MediaType;
@@ -30,9 +31,11 @@ import com.bootcamp.dscatalog.services.ProductService;
 import com.bootcamp.dscatalog.services.exceptions.DatabaseException;
 import com.bootcamp.dscatalog.services.exceptions.ResourceNotFoundException;
 import com.bootcamp.dscatalog.tests.Factory;
+import com.bootcamp.dscatalog.tokenTest.TokenUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-@WebMvcTest(ProductController.class)
+@SpringBootTest
+@AutoConfigureMockMvc
 public class ProductControllerTests {
 
 	@Autowired
@@ -43,8 +46,7 @@ public class ProductControllerTests {
 	
 	@Autowired
 	private ObjectMapper objectMapper; // objeto auxíliar
-	// Por não ser uma dependência deste controller, podemos injetar aqui diretamente.
-	// Não ferindo o principio de teste de unidade.
+ 	// Não ferindo o principio de teste de unidade.
 
 	private ProductDTO productDTO;
 	private PageImpl<ProductDTO> page;
@@ -53,6 +55,17 @@ public class ProductControllerTests {
 	private long existingId;
 	private long nonExistingId;
 	private long dependentId;
+	
+		//token
+		@Autowired
+		private TokenUtil tokenUtil;
+		
+		private String operatorUsername;
+		private String operatorPassword;
+		private String adminUsername;
+		private String adminPassword;
+		private String operatorToken;
+		private String adminToken ;
 
 	@BeforeEach
 	void setUp() throws Exception {
@@ -77,19 +90,30 @@ public class ProductControllerTests {
 		doThrow(DatabaseException.class).when(service).delete(dependentId);
 		
 		when(service.insert(any())).thenReturn(productDTO);
-
+		
+		//token
+	   operatorUsername = "alex@gmail.com";
+	   operatorPassword = "123456";
+	   adminUsername = "maria@gmail.com";
+	   adminPassword = "123456";
+	   
+		 operatorToken = tokenUtil.obtainAccessToken(mockMvc, operatorUsername, operatorPassword);
+		 adminToken = tokenUtil.obtainAccessToken(mockMvc, adminUsername, adminPassword);
 	}
 
 	@Test
 	public void findAllShouldReturnPage() throws Exception {
 		// perform - faz uma requisição.
-		ResultActions result = mockMvc.perform(get("/products").accept(MediaType.APPLICATION_JSON));
+		ResultActions result = mockMvc.perform(get("/products")
+				.header("Authorization", "Bearer " + operatorToken)
+				.accept(MediaType.APPLICATION_JSON));
 		result.andExpect(status().isOk());
 	}
 
 	@Test
 	public void findByIdShouldReturnProductDTOWhenIdExists() throws Exception {
 		ResultActions result = mockMvc.perform(get("/products/{id}", existingId)
+				.header("Authorization", "Bearer " + adminToken)
 				.accept(MediaType.APPLICATION_JSON));
 		result.andExpect(status().isOk());
 		result.andExpect(jsonPath("$.id").exists());// verificar se existe aquele atributo no objeto da resposta.
@@ -102,6 +126,7 @@ public class ProductControllerTests {
 	@Test
 	public void findByIdShouldReturnNotFoundWhenIdDoesNotExists() throws Exception {
 		ResultActions result = mockMvc.perform(get("/products/{id}", nonExistingId)
+				.header("Authorization", "Bearer " + adminToken)
 				.accept(MediaType.APPLICATION_JSON));
 		result.andExpect(status().isNotFound());// 404
 		// Como na camada de controller a ResourceNotFound foi tratada pelo controllerAdvice
@@ -115,14 +140,14 @@ public class ProductControllerTests {
 		String jsonBody = objectMapper.writeValueAsString(productDTO);
 		
 		ResultActions result = mockMvc.perform(put("/products/{id}", existingId)
+				.header("Authorization", "Bearer " + adminToken)
 				.content(jsonBody) // conteúdo que irá no corpo da requisição
 				.contentType(MediaType.APPLICATION_JSON)// tipo do conteúdo
 				.accept(MediaType.APPLICATION_JSON));
 				
 				result.andExpect(status().isOk());
 				result.andExpect(jsonPath("$.id").exists());
-				result.andExpect(jsonPath("$.name").exists());
-				result.andExpect(jsonPath("$.description").exists());
+ 				result.andExpect(jsonPath("$.description").exists());
 		
 	}
 	
@@ -131,6 +156,7 @@ public class ProductControllerTests {
 		String jsonBody = objectMapper.writeValueAsString(productDTO);
 		
 		ResultActions result = mockMvc.perform(put("/products/{id}", nonExistingId)
+				.header("Authorization", "Bearer " + operatorToken)
 				.content(jsonBody) // conteúdo que irá no corpo da requisição
 				.contentType(MediaType.APPLICATION_JSON)// tipo do conteúdo
 				.accept(MediaType.APPLICATION_JSON));
@@ -143,6 +169,7 @@ public class ProductControllerTests {
 		String jsonBody = objectMapper.writeValueAsString(productDTO);
 
 		ResultActions result = mockMvc.perform(post("/products")
+				.header("Authorization", "Bearer " + operatorToken)
 				.content(jsonBody) 
 				.contentType(MediaType.APPLICATION_JSON)
 				.accept(MediaType.APPLICATION_JSON));
@@ -154,14 +181,16 @@ public class ProductControllerTests {
 	
 	@Test
 	public void deleteShouldReturnNoContentWhenIdExists() throws Exception {
-		ResultActions result = mockMvc.perform(delete("/products/{id}", existingId));
+		ResultActions result = mockMvc.perform(delete("/products/{id}", existingId)
+				.header("Authorization", "Bearer " + operatorToken));
 		
 		result.andExpect(status().isNoContent());
 	}
 	
 	@Test
 	public void deleteShouldReturnNotFoundWhenIdDoesNotExists() throws Exception {
-		ResultActions result = mockMvc.perform(delete("/products/{id}", nonExistingId));
+		ResultActions result = mockMvc.perform(delete("/products/{id}", nonExistingId)
+				.header("Authorization", "Bearer " + operatorToken));
 		
 		result.andExpect(status().isNotFound());
 
@@ -169,7 +198,8 @@ public class ProductControllerTests {
 	
 	@Test
 	public void deleteShouldThrowDatabaseExceptionWhenIdIsRelatedToAnotherObject() throws Exception {
-		ResultActions result = mockMvc.perform(delete("/products/{id}", dependentId));
+		ResultActions result = mockMvc.perform(delete("/products/{id}", dependentId)
+				.header("Authorization", "Bearer " + operatorToken));
 		result.andExpect(res -> assertTrue(res.getResolvedException() instanceof DatabaseException ));
 		//1- Fazendo uma expressão lambda para ver a exceção retornada quando for um id dependente.
 		// 3 - No caso código acima serve para ver especificamente o tipo da exceção que está retornando
