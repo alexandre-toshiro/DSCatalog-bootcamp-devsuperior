@@ -164,5 +164,11 @@ public class ProductServiceTests {
 			service.update(nonExistingId, productDTO);
 		});
 	}
+	
+	@Test
+	public void insertShouldReturnCreatedAndId() {
+		ProductDTO dto = service.insert(productDTO);
+		assertNotNull(dto);
+	}
 
 }
