@@ -2,6 +2,7 @@ package com.bootcamp.dscatalog.tests;
 
 import java.time.Instant;
 
+import com.bootcamp.dscatalog.dto.CategoryDTO;
 import com.bootcamp.dscatalog.dto.ProductDTO;
 import com.bootcamp.dscatalog.entities.Category;
 import com.bootcamp.dscatalog.entities.Product;
@@ -22,6 +23,11 @@ public class Factory {
 
 	public static Category createCategory() {
 		return new Category(2L, "Electronics");
+	}
+	
+	public static CategoryDTO createCategoryDto() {
+		Category category = createCategory();
+		return new CategoryDTO(category);
 	}
 
 }
