@@ -1,4 +1,4 @@
-package com.bootcamp.dscatalog.controllers;
+package com.bootcamp.dscatalog.controllers.IT;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;

@@ -1,4 +1,4 @@
-package com.bootcamp.dscatalog.services;
+package com.bootcamp.dscatalog.services.IT;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.bootcamp.dscatalog.dto.ProductDTO;
 import com.bootcamp.dscatalog.repositories.ProductRepository;
+import com.bootcamp.dscatalog.services.ProductService;
 import com.bootcamp.dscatalog.services.exceptions.ResourceNotFoundException;
 
 @SpringBootTest
