@@ -14,57 +14,53 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.dao.EmptyResultDataAccessException;
 
-import com.bootcamp.dscatalog.entities.Product;
+import com.bootcamp.dscatalog.entities.Role;
 import com.bootcamp.dscatalog.tests.Factory;
 
 @DataJpaTest
-public class ProductRepositoryTests {
+public class RoleRepositoryTest {
 
 	@Autowired
-	private ProductRepository repository;
-	
+	private RoleRepository repository;
+
 	private long existingId;
 	private long nonExistingId;
-	private long countTotalProducts;
-	
-	@BeforeEach// Usado para instânciar uma variável antes de todos os testes
+	private long countTotalRoles;
+
+	@BeforeEach
 	void setUp() throws Exception {
+		// valores de acordo com os dados do h2
 		existingId = 1L;
-		nonExistingId = 1000L;
-		// A vantagem desse método é que caso essas váriaveis se repitam em diversos testes, não será necessário a declaração
-		// em cada um deles.
-		countTotalProducts = 25L;
+		nonExistingId = 9999L;
+		countTotalRoles = 2L;
 	}
-	
+
 	@Test
-	public void findByIdShouldReturnNonEmptyOptionalWhenIdExists() {
-		Optional<Product> result = repository.findById(existingId);
+	public void findByIdShouldReturnNonEmptyWhenIdExists() {
+		Optional<Role> result = repository.findById(existingId);
 		assertTrue(result.isPresent());
 	}
-	
+
 	@Test
-	public void findByIdShouldReturnEmptyOptionalWhenIdDoesNotExists() {
-		Optional<Product> result = repository.findById(nonExistingId);
+	public void findByIdShouldReturnEmptyWhenIdDoesNotExists() {
+		Optional<Role> result = repository.findById(nonExistingId);
 		assertTrue(result.isEmpty());
 	}
-	
+
 	@Test
 	public void saveShouldPersistWithAutoincrementWhenIdIsNull() {
-		Product product = Factory.createProduct();
-		product.setId(null);// apenas para garantir que o produto possui id NULO e portanto o save deverá salvar com autoIncremento
-		
-		product = repository.save(product);
-		
-		assertNotNull(product.getId());
-		assertEquals(countTotalProducts + 1, product.getId());
+		Role category = new Role(null, "ROLE_OWNER");
+
+		category = repository.save(category);
+
+		assertNotNull(category.getId());
+		assertEquals(countTotalRoles + 1, category.getId());
 	}
 
 	@Test
-	public void deleteShouldDeleteObjectWhenIdExists() {
+	public void deleteShouldDeleteWhenIdExists() {
 		repository.deleteById(existingId);
-		
-		Optional<Product> result = repository.findById(existingId);
-
+		Optional<Role> result = repository.findById(existingId);
 		assertFalse(result.isPresent());
 	}
 
