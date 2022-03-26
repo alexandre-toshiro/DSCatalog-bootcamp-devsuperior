@@ -39,7 +39,7 @@ public class Factory {
 	
 	public static User createUser() {
 		Role role = new Role(1L, "ROLE_ADMIN");
-		User user = new User(1L," Fernando", "Fera", "fera@gmail.com", "123456");
+		User user = new User(1L," Maria", "Mara", "maria@gmail.com", "123456");
 		user.getRoles().add(role);
 		return user;
 	}
