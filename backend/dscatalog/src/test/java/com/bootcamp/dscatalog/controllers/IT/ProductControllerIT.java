@@ -17,7 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.bootcamp.dscatalog.dto.ProductDTO;
 import com.bootcamp.dscatalog.tests.Factory;
-import com.bootcamp.dscatalog.tokenTest.TokenUtil;
+import com.bootcamp.dscatalog.util.TokenUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @SpringBootTest

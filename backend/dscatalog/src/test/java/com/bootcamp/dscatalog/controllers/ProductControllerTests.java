@@ -31,7 +31,7 @@ import com.bootcamp.dscatalog.services.ProductService;
 import com.bootcamp.dscatalog.services.exceptions.DatabaseException;
 import com.bootcamp.dscatalog.services.exceptions.ResourceNotFoundException;
 import com.bootcamp.dscatalog.tests.Factory;
-import com.bootcamp.dscatalog.tokenTest.TokenUtil;
+import com.bootcamp.dscatalog.util.TokenUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @SpringBootTest
