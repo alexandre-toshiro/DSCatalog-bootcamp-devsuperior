@@ -80,7 +80,7 @@ public class ProductControllerIT {
 		String expectedName = productDTO.getName();
 		String expectedDescription = productDTO.getDescription();
 		
-		String token = tokenUtil.obtainAccessToken(mockMvc, adminUsername, adminPassword);
+		String token = tokenUtil.obtainAccessToken(mockMvc, operatorUsername, operatorPassword);
 
 
 		ResultActions result = mockMvc.perform(put("/products/{id}", existingId)

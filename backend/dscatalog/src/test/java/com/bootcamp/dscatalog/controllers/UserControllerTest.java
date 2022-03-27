@@ -17,26 +17,23 @@ import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.http.MediaType;
-import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.security.test.context.support.WithUserDetails;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
 import com.bootcamp.dscatalog.dto.UserDTO;
+import com.bootcamp.dscatalog.repositories.UserRepository;
 import com.bootcamp.dscatalog.services.UserService;
 import com.bootcamp.dscatalog.services.exceptions.DatabaseException;
 import com.bootcamp.dscatalog.services.exceptions.ResourceNotFoundException;
 import com.bootcamp.dscatalog.tests.Factory;
-import com.bootcamp.dscatalog.util.TokenUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @WebMvcTest(UserController.class)
-@AutoConfigureMockMvc
+@AutoConfigureMockMvc(addFilters = false)
 public class UserControllerTest {
 
 	@Autowired
@@ -46,8 +43,7 @@ public class UserControllerTest {
 	private UserService service;
 
 	@Autowired
-	private ObjectMapper objectMapper;
-	
+	private ObjectMapper objectMapper;	
 
 	private UserDTO userDto;
 	private PageImpl<UserDTO> page;
@@ -56,24 +52,18 @@ public class UserControllerTest {
 	private long nonExistingId;
 	private long dependentId;
 
-	//token
-	@Autowired
-	private TokenUtil tokenUtil;
-
-	private String adminUsername;
-	private String adminPassword;
-	private String adminToken;
+	// Dependencias necessárias para o contexto parcial da camada de MVC - @WebMvcTest
+	@MockBean
+	private BCryptPasswordEncoder bcrypt;
+	
+	@MockBean
+	private UserRepository repository;
 
 	@BeforeEach
 	void setUp() throws Exception {
 		existingId = 1L;
 		nonExistingId = 3L;
 		dependentId = 2L;
-
-		adminUsername = "maria@gmail.com";
-		adminPassword = "123456";
-
-		adminToken = tokenUtil.obtainAccessToken(mockMvc, adminUsername, adminPassword);
 
 		userDto = Factory.createUserDto();
 		page = new PageImpl<>(List.of(userDto));
@@ -93,28 +83,24 @@ public class UserControllerTest {
 	public void findAllShouldReturnPage() throws Exception {
 		ResultActions result = mockMvc
 				.perform(get("/users")
-				.header("Authorization", "Bearer " + adminToken)
 				.accept(MediaType.APPLICATION_JSON));
 		result.andExpect(status().isOk());
 	}
 	
 	@Test
-	//@WithUserDetails(userDetailsServiceBeanName = UserService.class)
 	public void findByIdShouldReturnUserDTOWhenIdExists() throws Exception {
 		ResultActions result = mockMvc.perform(get("/users/{id}", existingId)
-				.header("Authorization", "Bearer " + adminToken)
 				.accept(MediaType.APPLICATION_JSON));
 		
 		result.andExpect(status().isOk());
 		result.andExpect(jsonPath("$.id").exists());
-		result.andExpect(jsonPath("$.name" ).exists());
+		result.andExpect(jsonPath("$.firstName" ).exists());
 
 	}
 	
 	@Test
 	public void findByIdShouldReturnNotFoundWhenIdDoesNotExists() throws Exception {
 		ResultActions result = mockMvc.perform(get("/users/{id}", nonExistingId)
-				.header("Authorization", "Bearer " + adminToken)
 				.accept(MediaType.APPLICATION_JSON));
 		result.andExpect(status().isNotFound());// 404
 	}
@@ -124,7 +110,6 @@ public class UserControllerTest {
 		String jsonBody = objectMapper.writeValueAsString(userDto);
 		
 		ResultActions result = mockMvc.perform(post("/users")
-				.header("Authorization", "Bearer " + adminToken)
 				.content(jsonBody)
 				.contentType(MediaType.APPLICATION_JSON)
 				.accept(MediaType.APPLICATION_JSON));
@@ -138,14 +123,13 @@ public class UserControllerTest {
 		String jsonBody = objectMapper.writeValueAsString(userDto);
 		
 		ResultActions result = mockMvc.perform(put("/users/{id}", existingId)
-		.header("Authorization", "Bearer " + adminToken)
 		.content(jsonBody)
 		.contentType(MediaType.APPLICATION_JSON)
 		.accept(MediaType.APPLICATION_JSON));
 		
 		result.andExpect(status().isOk());
 		result.andExpect(jsonPath("$.id").exists());
-		result.andExpect(jsonPath("$.name" ).exists());
+		result.andExpect(jsonPath("$.firstName" ).exists());
 	}
 	
 	@Test
@@ -153,7 +137,6 @@ public class UserControllerTest {
 		String jsonBody = objectMapper.writeValueAsString(userDto);
 		
 		ResultActions result = mockMvc.perform(put("/users/{id}", nonExistingId)
-				.header("Authorization", "Bearer " + adminToken)
 				.content(jsonBody) 
 				.contentType(MediaType.APPLICATION_JSON)
 				.accept(MediaType.APPLICATION_JSON));
@@ -163,16 +146,14 @@ public class UserControllerTest {
 	
 	@Test
 	public void deleteShouldReturnNoContentWhenIdExists() throws Exception {
-		ResultActions result = mockMvc.perform(delete("/users/{id}", existingId)
-				.header("Authorization", "Bearer " + adminToken));
+		ResultActions result = mockMvc.perform(delete("/users/{id}", existingId));
 		
 		result.andExpect(status().isNoContent());
 	}
 	
 	@Test
 	public void deleteShouldReturnNotFoundWhenIdDoesNotExists() throws Exception {
-		ResultActions result = mockMvc.perform(delete("/users/{id}", nonExistingId)
-				.header("Authorization", "Bearer " + adminToken));
+		ResultActions result = mockMvc.perform(delete("/users/{id}", nonExistingId));
 		
 		result.andExpect(status().isNotFound());
 
@@ -180,8 +161,7 @@ public class UserControllerTest {
 	
 	@Test
 	public void deleteShouldThrowDatabaseExceptionWhenIdIsRelatedToAnotherObject() throws Exception{
-		ResultActions result = mockMvc.perform(delete("/users/{id}", dependentId)
-				.header("Authorization", "Bearer " + adminToken));
+		ResultActions result = mockMvc.perform(delete("/users/{id}", dependentId));
 		result.andExpect(res -> assertTrue(res.getResolvedException() instanceof DatabaseException));
 		
 		result.andExpect(status().isBadRequest());
