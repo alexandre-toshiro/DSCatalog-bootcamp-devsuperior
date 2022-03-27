@@ -12,8 +12,6 @@ import com.bootcamp.dscatalog.entities.Product;
 import com.bootcamp.dscatalog.entities.Role;
 import com.bootcamp.dscatalog.entities.User;
 
-import net.bytebuddy.implementation.bind.annotation.Super;
-
 public class Factory {
 
 	public static Product createProduct() {
@@ -38,8 +36,8 @@ public class Factory {
 	}
 	
 	public static User createUser() {
-		Role role = new Role(1L, "ROLE_ADMIN");
-		User user = new User(1L," Maria", "Mara", "maria@gmail.com", "123456");
+		Role role = new Role(null, "ROLE_ADMIN");
+		User user = new User(10L," Maria", "Mara", "dorgas@gmail.com", "123456");
 		user.getRoles().add(role);
 		return user;
 	}
