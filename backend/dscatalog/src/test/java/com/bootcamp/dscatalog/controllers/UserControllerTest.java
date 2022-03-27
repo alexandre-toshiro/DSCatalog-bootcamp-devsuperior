@@ -57,7 +57,7 @@ public class UserControllerTest {
 	private BCryptPasswordEncoder bcrypt;
 	
 	@MockBean
-	private UserRepository repository;
+	private UserRepository repository; // necessário para conseguir passar do @Valid
 
 	@BeforeEach
 	void setUp() throws Exception {

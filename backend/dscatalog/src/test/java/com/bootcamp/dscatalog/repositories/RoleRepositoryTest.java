@@ -15,7 +15,6 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.dao.EmptyResultDataAccessException;
 
 import com.bootcamp.dscatalog.entities.Role;
-import com.bootcamp.dscatalog.tests.Factory;
 
 @DataJpaTest
 public class RoleRepositoryTest {
